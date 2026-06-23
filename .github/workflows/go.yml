@@ -1,18 +1,18 @@
 name: Build ttyplay
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main
       - master
-  workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Go
@@ -20,13 +20,24 @@ jobs:
         with:
           go-version: '1.22'
 
-      - name: Show files
-        run: dir
+      - name: Show repository structure
+        shell: pwsh
+        run: |
+          Get-ChildItem -Recurse
+
+      - name: Initialize Go module if missing
+        shell: pwsh
+        run: |
+          if (-not (Test-Path go.mod)) {
+            go mod init github.com/mattn/ttyrec4windows
+          }
+          go mod tidy
 
       - name: Build ttyplay
         working-directory: ./ttyplay
+        shell: pwsh
         run: |
-          go build -o ttyplay.exe
+          go build -v -o ttyplay.exe
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
